@@ -45,7 +45,7 @@ export default function Home() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#3a5a80',
+      backgroundColor: '#2471A3',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -60,7 +60,7 @@ export default function Home() {
         style={{ width: '120px', marginBottom: '20px' }}
       />
 
-      <h1 style={{ marginBottom: '20px', fontSize: '28px' }}>FPPRO Arıza Fiyat Paneli</h1>
+      <h1 style={{ marginBottom: '20px', fontSize: '28px' }}>Fiyat Hesaplama Paneli</h1>
 
       <textarea
         rows="6"
