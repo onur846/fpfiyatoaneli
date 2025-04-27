@@ -72,7 +72,7 @@ export default function Admin() {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: '#3a5a80',
+        backgroundColor: '#2471A3',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -116,7 +116,7 @@ export default function Admin() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#3a5a80',
+      backgroundColor: '#2471A3',
       color: 'white',
       fontFamily: 'Arial, sans-serif',
       padding: '20px'
@@ -157,7 +157,7 @@ export default function Admin() {
       </div>
 
       <div>
-        <h2>TR Cihazı Fiyatları</h2>
+        <h2>Full Fiyat</h2>
         <ul>
           {Object.entries(trCihaz).map(([key, val]) => (
             <li key={key}>
