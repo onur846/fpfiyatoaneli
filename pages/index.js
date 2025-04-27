@@ -43,34 +43,75 @@ export default function Home() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>FPPRO Arıza Fiyat Paneli</h1>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#3a5a80',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '40px',
+      color: 'white',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1 style={{ marginBottom: '20px' }}>FPPRO Arıza Fiyat Paneli</h1>
+
       <textarea
-        rows="5"
-        placeholder="Teknisyen Notu Yapıştırın..."
+        rows="6"
+        placeholder="Teknisyen Notunu Yapıştırın..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
+        style={{
+          width: '100%',
+          maxWidth: '600px',
+          padding: '10px',
+          borderRadius: '10px',
+          border: 'none',
+          marginBottom: '20px',
+          fontSize: '16px'
+        }}
       />
-      <button onClick={calculate} style={{ width: '100%', padding: 10, marginBottom: 20 }}>Fiyatları Hesapla</button>
+
+      <button
+        onClick={calculate}
+        style={{
+          backgroundColor: '#5c8dbc',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          borderRadius: '10px',
+          cursor: 'pointer',
+          fontSize: '18px',
+          marginBottom: '30px'
+        }}
+      >
+        Fiyatları Hesapla
+      </button>
 
       {prices.length > 0 && (
-        <table border="1" style={{ width: '100%', textAlign: 'center' }}>
-          <thead>
+        <table style={{
+          width: '100%',
+          maxWidth: '800px',
+          borderCollapse: 'collapse',
+          backgroundColor: 'white',
+          color: 'black',
+          borderRadius: '10px',
+          overflow: 'hidden'
+        }}>
+          <thead style={{ backgroundColor: '#5c8dbc', color: 'white' }}>
             <tr>
-              <th>Model</th>
-              <th>İşlem</th>
-              <th>Fiyat (KDV Hariç)</th>
-              <th>Fiyat (KDV Dahil)</th>
+              <th style={{ padding: '10px' }}>Model</th>
+              <th style={{ padding: '10px' }}>İşlem</th>
+              <th style={{ padding: '10px' }}>Fiyat (KDV Hariç)</th>
+              <th style={{ padding: '10px' }}>Fiyat (KDV Dahil)</th>
             </tr>
           </thead>
           <tbody>
             {prices.map((p, i) => (
               <tr key={i}>
-                <td>{p.model}</td>
-                <td>{p.islem}</td>
-                <td>{p.fiyat}₺</td>
-                <td>{(p.fiyat * 1.2).toFixed(2)}₺</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{p.model}</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{p.islem}</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{p.fiyat}₺</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{(p.fiyat * 1.2).toFixed(2)}₺</td>
               </tr>
             ))}
           </tbody>
