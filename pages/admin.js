@@ -125,7 +125,7 @@ export default function Admin() {
 
       <div style={{ marginBottom: '20px' }}>
         <select value={mode} onChange={(e) => setMode(e.target.value)} style={{ marginRight: '10px', padding: '8px' }}>
-          <option value="trCihaz">TR Cihazı Fiyatı</option>
+          <option value="trCihaz">Full Fiyat</option>
           <option value="anakart">Anakart Fiyatı</option>
         </select>
         <input
