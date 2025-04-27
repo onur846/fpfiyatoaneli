@@ -49,11 +49,18 @@ export default function Home() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '40px',
+      padding: '30px 20px',
       color: 'white',
       fontFamily: 'Arial, sans-serif'
     }}>
-      <h1 style={{ marginBottom: '20px' }}>FPPRO Arıza Fiyat Paneli</h1>
+      
+      <img
+        src="https://fpprotr.com/wp-content/uploads/2023/04/fppro-logo-symbol-white-nosubtitle.png"
+        alt="FPPRO Logo"
+        style={{ width: '120px', marginBottom: '20px' }}
+      />
+
+      <h1 style={{ marginBottom: '20px', fontSize: '28px' }}>FPPRO Arıza Fiyat Paneli</h1>
 
       <textarea
         rows="6"
@@ -63,7 +70,7 @@ export default function Home() {
         style={{
           width: '100%',
           maxWidth: '600px',
-          padding: '10px',
+          padding: '12px',
           borderRadius: '10px',
           border: 'none',
           marginBottom: '20px',
@@ -81,8 +88,11 @@ export default function Home() {
           borderRadius: '10px',
           cursor: 'pointer',
           fontSize: '18px',
-          marginBottom: '30px'
+          marginBottom: '30px',
+          transition: 'background-color 0.3s'
         }}
+        onMouseOver={(e) => e.target.style.backgroundColor = '#4a7aa6'}
+        onMouseOut={(e) => e.target.style.backgroundColor = '#5c8dbc'}
       >
         Fiyatları Hesapla
       </button>
@@ -95,7 +105,8 @@ export default function Home() {
           backgroundColor: 'white',
           color: 'black',
           borderRadius: '10px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)'
         }}>
           <thead style={{ backgroundColor: '#5c8dbc', color: 'white' }}>
             <tr>
