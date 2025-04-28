@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const [note, setNote] = useState('');
-  const [prices, setPrices] = useState([]);
-  const [selections, setSelections] = useState({});
   const [database, setDatabase] = useState({});
+  const [selectedModel, setSelectedModel] = useState('');
+  const [selectedRepairs, setSelectedRepairs] = useState(Array(10).fill(''));
 
   useEffect(() => {
     fetch('/database.json')
@@ -12,82 +11,76 @@ export default function Home() {
       .then(data => setDatabase(data));
   }, []);
 
-  const calculate = () => {
-    const noteLower = note.toLowerCase();
-    const found = [];
-
-    Object.entries(database).forEach(([model, islemler]) => {
-      if (noteLower.includes(model.toLowerCase())) {
-        Object.entries(islemler).forEach(([islem, fiyat]) => {
-          if (noteLower.includes(islem.toLowerCase())) {
-            found.push({ model, islem, fiyat });
-          }
-        });
-      }
-    });
-
-    setPrices(found);
-
-    const newSelections = {};
-    found.forEach((item, index) => {
-      newSelections[index] = item.fiyat;
-    });
-    setSelections(newSelections);
+  const handleModelChange = (e) => {
+    setSelectedModel(e.target.value);
+    setSelectedRepairs(Array(10).fill('')); // Model değişince işlemleri sıfırla
   };
 
-  const handleSelectionChange = (index, fiyat) => {
-    setSelections(prev => ({
-      ...prev,
-      [index]: fiyat
-    }));
+  const handleRepairChange = (index, value) => {
+    const newRepairs = [...selectedRepairs];
+    newRepairs[index] = value;
+    setSelectedRepairs(newRepairs);
   };
 
-  const kdvHarcToplam = Object.values(selections).reduce((acc, val) => acc + val, 0);
-  const kdvDahilToplam = (kdvHarcToplam * 1.2).toFixed(2);
+  const getPrice = (repairName) => {
+    if (selectedModel && repairName && database[selectedModel]) {
+      return database[selectedModel][repairName] || 0;
+    }
+    return 0;
+  };
+
+  const totalPriceWithoutKDV = selectedRepairs.reduce((acc, repair) => acc + getPrice(repair), 0);
+  const totalPriceWithKDV = (totalPriceWithoutKDV * 1.2).toFixed(2);
 
   return (
     <div style={{ padding: 20 }}>
       <h1>FPPRO Arıza Fiyat Paneli</h1>
-      <textarea
-        rows="5"
-        placeholder="Teknisyen Notu Yapıştırın..."
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <button onClick={calculate} style={{ width: '100%', padding: 10, marginBottom: 20 }}>Fiyatları Hesapla</button>
 
-      {prices.length > 0 && (
-        <table border="1" style={{ width: '100%', textAlign: 'center' }}>
-          <thead>
-            <tr>
-              <th>Model</th>
-              <th>İşlem</th>
-              <th>Fiyat (KDV Hariç)</th>
-              <th>Fiyat (KDV Dahil)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {prices.map((p, i) => (
-              <tr key={i}>
-                <td>{p.model}</td>
-                <td>{p.islem}</td>
-                <td>
-                  <select value={selections[i]} onChange={(e) => handleSelectionChange(i, parseFloat(e.target.value))}>
-                    <option value={p.fiyat}>{p.fiyat} ₺</option>
-                  </select>
-                </td>
-                <td>{(selections[i] * 1.2).toFixed(2)} ₺</td>
-              </tr>
+      {/* Müsvette kutusu */}
+      <textarea
+        rows="3"
+        placeholder="Teknisyen Notu - Sadece not almak için (işlevsiz)"
+        style={{ width: '100%', marginBottom: 20 }}
+      />
+
+      {/* Model Seçimi */}
+      <select value={selectedModel} onChange={handleModelChange} style={{ width: '100%', padding: 10, marginBottom: 20 }}>
+        <option value="">Model Seçiniz</option>
+        {Object.keys(database).map((model, idx) => (
+          <option key={idx} value={model}>{model}</option>
+        ))}
+      </select>
+
+      {/* İşlem Seçimi - 10 kutu */}
+      {Array(10).fill().map((_, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+          <select
+            value={selectedRepairs[index]}
+            onChange={(e) => handleRepairChange(index, e.target.value)}
+            style={{ flex: 2, marginRight: 10, padding: 8 }}
+            disabled={!selectedModel}
+          >
+            <option value="">İşlem Seçiniz</option>
+            {selectedModel && database[selectedModel] && Object.keys(database[selectedModel]).map((repair, idx) => (
+              <option key={idx} value={repair}>{repair}</option>
             ))}
-            <tr>
-              <th colSpan="2">TOPLAM</th>
-              <th>{kdvHarcToplam.toFixed(2)} ₺</th>
-              <th>{kdvDahilToplam} ₺</th>
-            </tr>
-          </tbody>
-        </table>
-      )}
+          </select>
+          <div style={{ flex: 1 }}>
+            {selectedRepairs[index] && (
+              <>
+                <div>KDV Hariç: {getPrice(selectedRepairs[index])} ₺</div>
+                <div>KDV Dahil: {(getPrice(selectedRepairs[index]) * 1.2).toFixed(2)} ₺</div>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Toplamlar */}
+      <div style={{ marginTop: 30, fontWeight: 'bold', fontSize: '18px' }}>
+        <div>Toplam KDV Hariç: {totalPriceWithoutKDV} ₺</div>
+        <div>Toplam KDV Dahil: {totalPriceWithKDV} ₺</div>
+      </div>
     </div>
   );
 }
