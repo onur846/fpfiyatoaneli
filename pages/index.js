@@ -1,46 +1,33 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 
 export default function Home() {
   const [note, setNote] = useState('');
   const [prices, setPrices] = useState([]);
   const [selections, setSelections] = useState({});
-  const [trAnakartData, setTrAnakartData] = useState({ trCihazFiyatlari: {}, anakartFiyatlari: {} });
+  const [database, setDatabase] = useState({});
 
   useEffect(() => {
     fetch('/database.json')
       .then(res => res.json())
-      .then(data => setTrAnakartData(data));
+      .then(data => setDatabase(data));
   }, []);
 
-  const calculate = async () => {
-    const res = await axios.get('/api/fiyatlar');
-    const fiyatlar = res.data;
-
+  const calculate = () => {
     const noteLower = note.toLowerCase();
     const found = [];
 
-    Object.entries(fiyatlar).forEach(([model, islemler]) => {
-      Object.entries(islemler).forEach(([islem, fiyat]) => {
-        if (noteLower.includes(model.toLowerCase()) && noteLower.includes(islem.toLowerCase())) {
-          found.push({ model, islem, fiyat });
-        }
-      });
-    });
-
-    Object.entries(trAnakartData.trCihazFiyatlari).forEach(([model, fiyat]) => {
-      if (noteLower.includes(model.toLowerCase()) && (noteLower.includes('full') || noteLower.includes('aşırı'))) {
-        found.push({ model, islem: 'TR Cihazı Full Fiyatı', fiyat });
-      }
-    });
-
-    Object.entries(trAnakartData.anakartFiyatlari).forEach(([model, fiyat]) => {
-      if (noteLower.includes(model.toLowerCase()) && (noteLower.includes('anakart') || noteLower.includes('kart'))) {
-        found.push({ model, islem: 'Anakart Onarım', fiyat });
+    Object.entries(database).forEach(([model, islemler]) => {
+      if (noteLower.includes(model.toLowerCase())) {
+        Object.entries(islemler).forEach(([islem, fiyat]) => {
+          if (noteLower.includes(islem.toLowerCase())) {
+            found.push({ model, islem, fiyat });
+          }
+        });
       }
     });
 
     setPrices(found);
+
     const newSelections = {};
     found.forEach((item, index) => {
       newSelections[index] = item.fiyat;
@@ -88,7 +75,6 @@ export default function Home() {
                 <td>
                   <select value={selections[i]} onChange={(e) => handleSelectionChange(i, parseFloat(e.target.value))}>
                     <option value={p.fiyat}>{p.fiyat} ₺</option>
-                    {/* Geliştirme: İstersen buraya varyasyonları ekleyebiliriz */}
                   </select>
                 </td>
                 <td>{(selections[i] * 1.2).toFixed(2)} ₺</td>
