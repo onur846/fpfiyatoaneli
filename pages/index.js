@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Home() {
   const [note, setNote] = useState('');
   const [prices, setPrices] = useState([]);
+  const [selections, setSelections] = useState({});
   const [trAnakartData, setTrAnakartData] = useState({ trCihazFiyatlari: {}, anakartFiyatlari: {} });
 
   useEffect(() => {
@@ -40,91 +41,64 @@ export default function Home() {
     });
 
     setPrices(found);
+    const newSelections = {};
+    found.forEach((item, index) => {
+      newSelections[index] = item.fiyat;
+    });
+    setSelections(newSelections);
   };
 
+  const handleSelectionChange = (index, fiyat) => {
+    setSelections(prev => ({
+      ...prev,
+      [index]: fiyat
+    }));
+  };
+
+  const kdvHarcToplam = Object.values(selections).reduce((acc, val) => acc + val, 0);
+  const kdvDahilToplam = (kdvHarcToplam * 1.2).toFixed(2);
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#2471A3',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: '30px 20px',
-      color: 'white',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      
-      <img
-        src="https://fpprotr.com/wp-content/uploads/2023/04/fppro-logo-symbol-white-nosubtitle.png"
-        alt="FPPRO Logo"
-        style={{ width: '120px', marginBottom: '20px' }}
-      />
-
-      <h1 style={{ marginBottom: '20px', fontSize: '28px' }}>Fiyat Hesaplama Paneli</h1>
-
+    <div style={{ padding: 20 }}>
+      <h1>FPPRO Arıza Fiyat Paneli</h1>
       <textarea
-        rows="6"
-        placeholder="Teknisyen Notunu Yapıştırın..."
+        rows="5"
+        placeholder="Teknisyen Notu Yapıştırın..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        style={{
-          width: '100%',
-          maxWidth: '600px',
-          padding: '12px',
-          borderRadius: '10px',
-          border: 'none',
-          marginBottom: '20px',
-          fontSize: '16px'
-        }}
+        style={{ width: '100%', marginBottom: 10 }}
       />
-
-      <button
-        onClick={calculate}
-        style={{
-          backgroundColor: '#5c8dbc',
-          color: 'white',
-          border: 'none',
-          padding: '12px 24px',
-          borderRadius: '10px',
-          cursor: 'pointer',
-          fontSize: '18px',
-          marginBottom: '30px',
-          transition: 'background-color 0.3s'
-        }}
-        onMouseOver={(e) => e.target.style.backgroundColor = '#4a7aa6'}
-        onMouseOut={(e) => e.target.style.backgroundColor = '#5c8dbc'}
-      >
-        Fiyatları Hesapla
-      </button>
+      <button onClick={calculate} style={{ width: '100%', padding: 10, marginBottom: 20 }}>Fiyatları Hesapla</button>
 
       {prices.length > 0 && (
-        <table style={{
-          width: '100%',
-          maxWidth: '800px',
-          borderCollapse: 'collapse',
-          backgroundColor: 'white',
-          color: 'black',
-          borderRadius: '10px',
-          overflow: 'hidden',
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)'
-        }}>
-          <thead style={{ backgroundColor: '#5c8dbc', color: 'white' }}>
+        <table border="1" style={{ width: '100%', textAlign: 'center' }}>
+          <thead>
             <tr>
-              <th style={{ padding: '10px' }}>Model</th>
-              <th style={{ padding: '10px' }}>İşlem</th>
-              <th style={{ padding: '10px' }}>Fiyat (KDV Hariç)</th>
-              <th style={{ padding: '10px' }}>Fiyat (KDV Dahil)</th>
+              <th>Model</th>
+              <th>İşlem</th>
+              <th>Fiyat (KDV Hariç)</th>
+              <th>Fiyat (KDV Dahil)</th>
             </tr>
           </thead>
           <tbody>
             {prices.map((p, i) => (
               <tr key={i}>
-                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{p.model}</td>
-                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{p.islem}</td>
-                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{p.fiyat}₺</td>
-                <td style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>{(p.fiyat * 1.2).toFixed(2)}₺</td>
+                <td>{p.model}</td>
+                <td>{p.islem}</td>
+                <td>
+                  <select value={selections[i]} onChange={(e) => handleSelectionChange(i, parseFloat(e.target.value))}>
+                    <option value={p.fiyat}>{p.fiyat} ₺</option>
+                    {/* Geliştirme: İstersen buraya varyasyonları ekleyebiliriz */}
+                  </select>
+                </td>
+                <td>{(selections[i] * 1.2).toFixed(2)} ₺</td>
               </tr>
             ))}
+            <tr>
+              <th colSpan="2">TOPLAM</th>
+              <th>{kdvHarcToplam.toFixed(2)} ₺</th>
+              <th>{kdvDahilToplam} ₺</th>
+            </tr>
           </tbody>
         </table>
       )}
