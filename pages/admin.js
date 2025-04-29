@@ -1,200 +1,154 @@
 import { useState, useEffect } from "react";
 
 export default function Admin() {
-  const [password, setPassword] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [database, setDatabase] = useState({});
+  const [models, setModels] = useState({});
   const [newModel, setNewModel] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [newRepair, setNewRepair] = useState("");
   const [newPrice, setNewPrice] = useState("");
-  const [selectedRepair, setSelectedRepair] = useState("");
-  const [updatedPrice, setUpdatedPrice] = useState("");
+  const [editModelName, setEditModelName] = useState("");
+  const [editRepairName, setEditRepairName] = useState("");
+  const [editRepairPrice, setEditRepairPrice] = useState("");
 
   useEffect(() => {
-    fetch('/database.json')
-      .then(res => res.json())
-      .then(data => setDatabase(data));
+    fetchData();
+
+    const socket = new WebSocket("wss://senin-railway-domain/websocket");
+    socket.onmessage = (event) => {
+      if (event.data === "update") {
+        fetchData();
+      }
+    };
+
+    return () => socket.close();
   }, []);
 
-  const handleLogin = () => {
-    if (password === "Fp9097") {
-      setIsLoggedIn(true);
-    } else {
-      alert("Yanlış şifre!");
-    }
+  const fetchData = async () => {
+    const res = await fetch("https://senin-railway-domain/data");
+    const data = await res.json();
+    setModels(data);
+  };
+
+  const sendUpdate = async (data) => {
+    await fetch("https://senin-railway-domain/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
   };
 
   const addModel = () => {
     if (!newModel.trim()) return;
-    if (database[newModel]) {
-      alert("Bu model zaten var!");
-      return;
-    }
-    setDatabase(prev => ({ ...prev, [newModel]: {} }));
+    sendUpdate({ type: "addModel", model: newModel.trim() });
     setNewModel("");
+  };
+
+  const renameModel = () => {
+    if (!selectedModel || !editModelName.trim()) return;
+    sendUpdate({ type: "renameModel", oldModel: selectedModel, newModel: editModelName.trim() });
+    setEditModelName("");
   };
 
   const deleteModel = () => {
     if (!selectedModel) return;
-    const updated = { ...database };
-    delete updated[selectedModel];
-    setDatabase(updated);
+    sendUpdate({ type: "deleteModel", model: selectedModel });
     setSelectedModel("");
   };
 
   const addRepair = () => {
     if (!selectedModel || !newRepair.trim() || !newPrice) return;
-    setDatabase(prev => ({
-      ...prev,
-      [selectedModel]: {
-        ...prev[selectedModel],
-        [newRepair]: parseFloat(newPrice)
-      }
-    }));
+    sendUpdate({ type: "addRepair", model: selectedModel, repair: newRepair.trim(), price: parseFloat(newPrice) });
     setNewRepair("");
     setNewPrice("");
   };
 
+  const renameRepair = () => {
+    if (!selectedModel || !editRepairName.trim()) return;
+    sendUpdate({ type: "renameRepair", model: selectedModel, oldRepair: editRepairName.split("=>")[0], newRepair: editRepairName.split("=>")[1] });
+    setEditRepairName("");
+  };
+
   const updateRepairPrice = () => {
-    if (!selectedModel || !selectedRepair || !updatedPrice) return;
-    setDatabase(prev => ({
-      ...prev,
-      [selectedModel]: {
-        ...prev[selectedModel],
-        [selectedRepair]: parseFloat(updatedPrice)
-      }
-    }));
-    setSelectedRepair("");
-    setUpdatedPrice("");
+    if (!selectedModel || !editRepairPrice.trim()) return;
+    const [repairName, price] = editRepairPrice.split("=>");
+    sendUpdate({ type: "updateRepairPrice", model: selectedModel, repair: repairName, price: parseFloat(price) });
+    setEditRepairPrice("");
   };
 
-  const deleteRepair = () => {
-    if (!selectedModel || !selectedRepair) return;
-    const updated = { ...database };
-    delete updated[selectedModel][selectedRepair];
-    setDatabase(updated);
-    setSelectedRepair("");
+  const deleteRepair = (repairName) => {
+    sendUpdate({ type: "deleteRepair", model: selectedModel, repair: repairName });
   };
-
-  const downloadJSON = () => {
-    const element = document.createElement("a");
-    const file = new Blob([JSON.stringify(database, null, 2)], { type: "application/json" });
-    element.href = URL.createObjectURL(file);
-    element.download = "database.json";
-    document.body.appendChild(element);
-    element.click();
-  };
-
-  if (!isLoggedIn) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h1>Admin Girişi</h1>
-        <input
-          type="password"
-          placeholder="Şifre"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ padding: 10, marginBottom: 10 }}
-        />
-        <button onClick={handleLogin} style={{ padding: 10 }}>Giriş Yap</button>
-      </div>
-    );
-  }
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, backgroundColor: "#3a5a80", minHeight: "100vh", color: "#fff" }}>
       <h1>FPPRO Admin Panel</h1>
 
-      <hr />
+      <div style={{ marginBottom: 20 }}>
+        <h3>Yeni Model Ekle</h3>
+        <input placeholder="Model adı" value={newModel} onChange={(e) => setNewModel(e.target.value)} />
+        <button onClick={addModel}>Model Ekle</button>
+      </div>
 
-      {/* Yeni Model Ekle */}
-      <h3>Yeni Model Ekle</h3>
-      <input
-        type="text"
-        placeholder="Model Adı"
-        value={newModel}
-        onChange={(e) => setNewModel(e.target.value)}
-        style={{ padding: 8, marginRight: 10 }}
-      />
-      <button onClick={addModel} style={{ padding: 8 }}>Model Ekle</button>
-
-      <hr />
-
-      {/* Mevcut Model Seç */}
-      <h3>Model Seçimi</h3>
-      <select
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value)}
-        style={{ width: '100%', padding: 10 }}
-      >
-        <option value="">Model Seçiniz</option>
-        {Object.keys(database).map((model, idx) => (
-          <option key={idx} value={model}>{model}</option>
-        ))}
-      </select>
+      <div style={{ marginBottom: 20 }}>
+        <h3>Model Seç</h3>
+        <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
+          <option value="">Model Seçiniz</option>
+          {Object.keys(models).map((model, idx) => (
+            <option key={idx} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {selectedModel && (
         <>
-          {/* İşlem Ekle */}
-          <h3>İşlem Ekle</h3>
-          <input
-            type="text"
-            placeholder="İşlem Adı"
-            value={newRepair}
-            onChange={(e) => setNewRepair(e.target.value)}
-            style={{ padding: 8, marginRight: 10 }}
-          />
-          <input
-            type="number"
-            placeholder="Fiyat (KDV Hariç)"
-            value={newPrice}
-            onChange={(e) => setNewPrice(e.target.value)}
-            style={{ padding: 8, marginRight: 10 }}
-          />
-          <button onClick={addRepair} style={{ padding: 8 }}>İşlem Ekle</button>
+          <div style={{ marginBottom: 20 }}>
+            <h3>Model Adı Düzenle</h3>
+            <input placeholder="Yeni model adı" value={editModelName} onChange={(e) => setEditModelName(e.target.value)} />
+            <button onClick={renameModel}>Model Adını Değiştir</button>
+          </div>
 
-          {/* İşlem Seç */}
-          <h3>İşlem Seç</h3>
-          <select
-            value={selectedRepair}
-            onChange={(e) => setSelectedRepair(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 10 }}
-          >
-            <option value="">İşlem Seçiniz</option>
-            {database[selectedModel] && Object.keys(database[selectedModel]).map((repair, idx) => (
-              <option key={idx} value={repair}>{repair}</option>
+          <div style={{ marginBottom: 20 }}>
+            <button onClick={deleteModel} style={{ backgroundColor: "red", color: "white" }}>
+              Modeli Sil
+            </button>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3>İşlem Ekle</h3>
+            <input placeholder="İşlem adı" value={newRepair} onChange={(e) => setNewRepair(e.target.value)} />
+            <input placeholder="Fiyat" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} />
+            <button onClick={addRepair}>İşlem Ekle</button>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3>İşlem Adı Değiştir (EskiAd=>YeniAd)</h3>
+            <input placeholder="Örn: Pil Değişimi=>Batarya Değişimi" value={editRepairName} onChange={(e) => setEditRepairName(e.target.value)} />
+            <button onClick={renameRepair}>İşlem Adını Değiştir</button>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3>İşlem Fiyatı Değiştir (İşlemAdı=>YeniFiyat)</h3>
+            <input placeholder="Örn: Pil Değişimi=>2500" value={editRepairPrice} onChange={(e) => setEditRepairPrice(e.target.value)} />
+            <button onClick={updateRepairPrice}>İşlem Fiyatını Değiştir</button>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h3>İşlemler</h3>
+            {Object.keys(models[selectedModel]).map((repair, idx) => (
+              <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>
+                  {repair} — {models[selectedModel][repair]}₺
+                </span>
+                <button onClick={() => deleteRepair(repair)} style={{ backgroundColor: "red", color: "white" }}>
+                  Sil
+                </button>
+              </div>
             ))}
-          </select>
-
-          {/* Fiyat Güncelle */}
-          <h3>İşlem Fiyatı Güncelle</h3>
-          <input
-            type="number"
-            placeholder="Yeni Fiyat (KDV Hariç)"
-            value={updatedPrice}
-            onChange={(e) => setUpdatedPrice(e.target.value)}
-            style={{ padding: 8, marginRight: 10 }}
-          />
-          <button onClick={updateRepairPrice} style={{ padding: 8 }}>Fiyat Güncelle</button>
-
-          {/* İşlem Sil */}
-          <h3>İşlem Sil</h3>
-          <button onClick={deleteRepair} style={{ padding: 8, backgroundColor: 'red', color: 'white' }}>İşlem Sil</button>
-
-          {/* Model Sil */}
-          <h3>Model Sil</h3>
-          <button onClick={deleteModel} style={{ padding: 8, backgroundColor: 'darkred', color: 'white' }}>Model Sil</button>
+          </div>
         </>
       )}
-
-      <hr />
-
-      {/* JSON İndir */}
-      <h3>Database.json İndir</h3>
-      <button onClick={downloadJSON} style={{ padding: 10, backgroundColor: '#5c8dbc', color: 'white' }}>
-        İndir
-      </button>
     </div>
   );
 }
