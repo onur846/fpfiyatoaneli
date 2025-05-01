@@ -7,15 +7,8 @@ export default function Home() {
 
   useEffect(() => {
     fetchData();
-
-    const socket = new WebSocket("wss://fpfiyatpaneli-production.up.railway.app/websocket");
-    socket.onmessage = (event) => {
-      if (event.data === "update") {
-        fetchData();
-      }
-    };
-
-    return () => socket.close();
+    const interval = setInterval(fetchData, 5000); // 5 saniyede bir veri güncelle
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -73,7 +66,7 @@ export default function Home() {
               {selectedRepairs[idx] && data[selectedModel]?.[selectedRepairs[idx]] && (
                 <p>
                   <strong>
-                    {data[selectedModel][selectedRepairs[idx]]}₺ (KDV Hariç) —{" "}
+                    {data[selectedModel][selectedRepairs[idx]]}₺ (KDV Hariç) — {" "}
                     {(data[selectedModel][selectedRepairs[idx]] * 1.2).toFixed(2)}₺ (KDV Dahil)
                   </strong>
                 </p>
