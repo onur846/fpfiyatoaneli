@@ -12,15 +12,8 @@ export default function Admin() {
 
   useEffect(() => {
     fetchData();
-
-    const socket = new WebSocket("wss://fpfiyatpaneli-production.up.railway.app/websocket");
-    socket.onmessage = (event) => {
-      if (event.data === "update") {
-        fetchData();
-      }
-    };
-
-    return () => socket.close();
+    const interval = setInterval(fetchData, 5000); // 5 saniyede bir veri çek
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
