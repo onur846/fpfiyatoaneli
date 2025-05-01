@@ -17,13 +17,13 @@ export default function Admin() {
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch("https://fpfiyatpaneli-production.up.railway.app/data");
+    const res = await fetch("https://fpfiyatpaneli-production-0e3b.up.railway.app/data");
     const data = await res.json();
     setModels(data);
   };
 
   const sendUpdate = async (data) => {
-    await fetch("https://fpfiyatpaneli-production.up.railway.app/update", {
+    await fetch("https://fpfiyatpaneli-production-0e3b.up.railway.app/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
