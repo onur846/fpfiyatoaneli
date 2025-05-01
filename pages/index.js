@@ -19,7 +19,7 @@ export default function Home() {
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch("fpfiyatpaneli-production.up.railway.app/data");
+    const res = await fetch("https://fpfiyatpaneli-production.up.railway.app/data");
     const json = await res.json();
     setData(json);
   };
