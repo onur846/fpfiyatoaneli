@@ -13,7 +13,7 @@ export default function Admin() {
   useEffect(() => {
     fetchData();
 
-    const socket = new WebSocket("wss://senin-railway-domain/websocket");
+    const socket = new WebSocket("wss://fpfiyatpaneli-production.up.railway.app/websocket");
     socket.onmessage = (event) => {
       if (event.data === "update") {
         fetchData();
@@ -24,13 +24,13 @@ export default function Admin() {
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch("https://senin-railway-domain/data");
+    const res = await fetch("https://fpfiyatpaneli-production.up.railway.app/data");
     const data = await res.json();
     setModels(data);
   };
 
   const sendUpdate = async (data) => {
-    await fetch("https://senin-railway-domain/update", {
+    await fetch("https://fpfiyatpaneli-production.up.railway.app/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
