@@ -12,18 +12,25 @@ export default function Admin() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000); // 5 saniyede bir veri çek
-    return () => clearInterval(interval);
+
+    const socket = new WebSocket("wss://fppro-fiyat-server.onrender.com/websocket");
+    socket.onmessage = (event) => {
+      if (event.data === "update") {
+        fetchData();
+      }
+    };
+
+    return () => socket.close();
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch("https://fpfiyatpaneli-production-0e3b.up.railway.app/data");
+    const res = await fetch("https://fppro-fiyat-server.onrender.com/data");
     const data = await res.json();
     setModels(data);
   };
 
   const sendUpdate = async (data) => {
-    await fetch("https://fpfiyatpaneli-production-0e3b.up.railway.app/update", {
+    await fetch("https://fppro-fiyat-server.onrender.com/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -87,9 +94,7 @@ export default function Admin() {
         <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
           <option value="">Model Seçiniz</option>
           {Object.keys(models).map((model, idx) => (
-            <option key={idx} value={model}>
-              {model}
-            </option>
+            <option key={idx} value={model}>{model}</option>
           ))}
         </select>
       </div>
@@ -130,10 +135,8 @@ export default function Admin() {
           <div style={{ marginBottom: 20 }}>
             <h3>İşlemler</h3>
             {Object.keys(models[selectedModel]).map((repair, idx) => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span>
-                  {repair} — {models[selectedModel][repair]}₺
-                </span>
+              <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{repair} — {models[selectedModel][repair]}₺</span>
                 <button onClick={() => deleteRepair(repair)} style={{ backgroundColor: "red", color: "white" }}>
                   Sil
                 </button>
