@@ -7,12 +7,19 @@ export default function Home() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000); // 5 saniyede bir veri güncelle
-    return () => clearInterval(interval);
+
+    const socket = new WebSocket("wss://fppro-fiyat-server.onrender.com/websocket");
+    socket.onmessage = (event) => {
+      if (event.data === "update") {
+        fetchData();
+      }
+    };
+
+    return () => socket.close();
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch("https://fpfiyatpaneli-production-0e3b.up.railway.app/data");
+    const res = await fetch("https://fppro-fiyat-server.onrender.com/data");
     const json = await res.json();
     setData(json);
   };
@@ -66,7 +73,7 @@ export default function Home() {
               {selectedRepairs[idx] && data[selectedModel]?.[selectedRepairs[idx]] && (
                 <p>
                   <strong>
-                    {data[selectedModel][selectedRepairs[idx]]}₺ (KDV Hariç) — {" "}
+                    {data[selectedModel][selectedRepairs[idx]]}₺ (KDV Hariç) —{" "}
                     {(data[selectedModel][selectedRepairs[idx]] * 1.2).toFixed(2)}₺ (KDV Dahil)
                   </strong>
                 </p>
@@ -76,12 +83,8 @@ export default function Home() {
 
           <hr />
           <h3>Toplam:</h3>
-          <p>
-            <strong>KDV Hariç:</strong> {totalPrice}₺
-          </p>
-          <p>
-            <strong>KDV Dahil:</strong> {totalKdv.toFixed(2)}₺
-          </p>
+          <p><strong>KDV Hariç:</strong> {totalPrice}₺</p>
+          <p><strong>KDV Dahil:</strong> {totalKdv.toFixed(2)}₺</p>
         </>
       )}
     </div>
