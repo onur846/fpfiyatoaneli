@@ -8,7 +8,7 @@ export default function Home() {
   useEffect(() => {
     fetchData();
 
-    const socket = new WebSocket('wss://fpfiyatpaneli-production.up.railway.app/websocket');
+    const socket = new WebSocket("wss://fpfiyatpaneli-production.up.railway.app/websocket");
     socket.onmessage = (event) => {
       if (event.data === "update") {
         fetchData();
@@ -19,7 +19,7 @@ export default function Home() {
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch('fpfiyatpaneli-production.up.railway.app/data');
+    const res = await fetch("fpfiyatpaneli-production.up.railway.app/data");
     const json = await res.json();
     setData(json);
   };
