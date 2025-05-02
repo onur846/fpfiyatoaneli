@@ -108,7 +108,7 @@ export default function Admin() {
         <h2>Admin Panel Girişi</h2>
         <input
           type="password"
-          placeholder="Şifre: Fp9097"
+          placeholder=""
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{ marginRight: 10 }}
