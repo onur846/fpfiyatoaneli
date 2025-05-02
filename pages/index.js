@@ -4,21 +4,11 @@ export default function Home() {
   const [database, setDatabase] = useState({});
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedRepairs, setSelectedRepairs] = useState(Array(10).fill(''));
-  const [repairOrder, setRepairOrder] = useState({});
 
   useEffect(() => {
     fetch('/database.json')
       .then(res => res.json())
-      .then(data => {
-        setDatabase(data);
-
-        // her modelin işlem sırasını orijinal sırayla tut
-        const order = {};
-        Object.keys(data).forEach(model => {
-          order[model] = Object.keys(data[model]);
-        });
-        setRepairOrder(order);
-      });
+      .then(data => setDatabase(data));
   }, []);
 
   const handleModelChange = (e) => {
@@ -43,17 +33,6 @@ export default function Home() {
   const totalPriceWithoutKDV = selectedRepairs.reduce((acc, repair) => acc + getPrice(repair), 0);
   const totalPriceWithKDV = (totalPriceWithoutKDV * 1.2).toFixed(2);
 
-  const getSortedRepairs = () => {
-    if (!selectedModel || !database[selectedModel]) return [];
-
-    const repairs = Object.keys(database[selectedModel]);
-
-    // önceki sıralama varsa koru, yeni eklenenleri en üste al
-    const previous = repairOrder[selectedModel] || [];
-    const newOnes = repairs.filter(r => !previous.includes(r));
-    return [...newOnes, ...previous.filter(r => repairs.includes(r))];
-  };
-
   return (
     <div style={{ padding: '20px', backgroundColor: '#2471A3', minHeight: '100vh', color: 'white', fontFamily: 'Arial' }}>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -65,14 +44,14 @@ export default function Home() {
       <textarea
         rows="3"
         placeholder="Teknisyen Notu - (İşlevsiz, sadece müsvette)"
-        style={{ width: '100%', marginBottom: '20px', padding: '10px', borderRadius: '8px' }}
+        style={{ width: '100%', maxWidth: '600px', marginBottom: '20px', padding: '10px', borderRadius: '8px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
       />
 
       {/* Model Seçimi */}
       <select
         value={selectedModel}
         onChange={handleModelChange}
-        style={{ width: '100%', marginBottom: '20px', padding: '10px', borderRadius: '8px' }}
+        style={{ width: '100%', maxWidth: '600px', marginBottom: '20px', padding: '10px', borderRadius: '8px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
       >
         <option value="">Model Seçiniz</option>
         {Object.keys(database).map((model, idx) => (
@@ -82,7 +61,7 @@ export default function Home() {
 
       {/* İşlem Seçimi - 10 adet */}
       {Array.from({ length: 10 }).map((_, idx) => (
-        <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', maxWidth: '800px', margin: '0 auto' }}>
           <select
             value={selectedRepairs[idx]}
             onChange={(e) => handleRepairChange(idx, e.target.value)}
@@ -90,7 +69,7 @@ export default function Home() {
             disabled={!selectedModel}
           >
             <option value="">İşlem Seçiniz</option>
-            {selectedModel && getSortedRepairs().map((repair, rIdx) => (
+            {selectedModel && database[selectedModel] && Object.keys(database[selectedModel]).map((repair, rIdx) => (
               <option key={rIdx} value={repair}>{repair}</option>
             ))}
           </select>
