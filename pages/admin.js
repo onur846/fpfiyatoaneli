@@ -1,190 +1,179 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Admin() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+
   const [models, setModels] = useState({});
   const [selectedModel, setSelectedModel] = useState("");
-  const [selectedRepair, setSelectedRepair] = useState("");
   const [newModel, setNewModel] = useState("");
-  const [newRepair, setNewRepair] = useState("");
-  const [newPrice, setNewPrice] = useState("");
+  const [newRepairName, setNewRepairName] = useState("");
+  const [newRepairPrice, setNewRepairPrice] = useState("");
   const [editModelName, setEditModelName] = useState("");
   const [editRepairName, setEditRepairName] = useState("");
+  const [editRepairNewName, setEditRepairNewName] = useState("");
   const [editRepairPrice, setEditRepairPrice] = useState("");
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
 
-  const GITHUB_TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-  const REPO_OWNER = "onur846";
-  const REPO_NAME = "fpfiyatpaneli";
-  const FILE_PATH = "public/database.json";
+  const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+  const owner = "onur846";
+  const repo = "fpfiyatpaneli";
+  const path = "public/database.json";
 
   useEffect(() => {
-    if (authenticated) fetchData();
+    if (authenticated) {
+      fetch("/database.json")
+        .then((res) => res.json())
+        .then((data) => setModels(data));
+    }
   }, [authenticated]);
 
-  const fetchData = async () => {
-    const res = await fetch("/database.json");
-    const data = await res.json();
-    setModels(data);
-  };
+  const updateGitHubFile = async (updatedData) => {
+    const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      headers: {
+        Authorization: `token ${token}`,
+      },
+    });
+    const file = await getRes.json();
 
-  const updateFile = async (updatedData) => {
-    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`);
-    const json = await res.json();
-    const sha = json.sha;
-
-    await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+    await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Authorization: `token ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: "Update database.json via admin panel",
+        message: "Update database.json",
         content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedData, null, 2)))),
-        sha,
+        sha: file.sha,
       }),
     });
+
+    setModels(updatedData);
   };
 
-  const handleLogin = () => {
-    if (password === "Fp9097") {
-      setAuthenticated(true);
-    } else {
-      alert("Şifre hatalı.");
-    }
-  };
-
-  const handleAddModel = () => {
+  const addModel = () => {
     if (!newModel.trim()) return;
-    const updated = { ...models, [newModel.trim()]: {} };
-    setModels(updated);
-    updateFile(updated);
+    const updated = { ...models, [newModel]: {} };
+    updateGitHubFile(updated);
     setNewModel("");
   };
 
-  const handleRenameModel = () => {
+  const renameModel = () => {
     if (!selectedModel || !editModelName.trim()) return;
     const updated = { ...models };
     updated[editModelName] = updated[selectedModel];
     delete updated[selectedModel];
-    setModels(updated);
-    updateFile(updated);
+    updateGitHubFile(updated);
     setSelectedModel(editModelName);
     setEditModelName("");
   };
 
-  const handleAddRepair = () => {
-    if (!selectedModel || !newRepair.trim() || !newPrice) return;
+  const addRepair = () => {
+    if (!selectedModel || !newRepairName.trim() || !newRepairPrice) return;
     const updated = { ...models };
-    updated[selectedModel][newRepair.trim()] = parseFloat(newPrice);
-    setModels(updated);
-    updateFile(updated);
-    setNewRepair("");
-    setNewPrice("");
+    const currentRepairs = updated[selectedModel];
+    const newRepairs = { [newRepairName]: parseFloat(newRepairPrice), ...currentRepairs }; // yeni işlem en üste
+    updated[selectedModel] = newRepairs;
+    updateGitHubFile(updated);
+    setNewRepairName("");
+    setNewRepairPrice("");
   };
 
-  const handleRenameRepair = () => {
-    if (!selectedModel || !selectedRepair || !editRepairName.trim()) return;
+  const renameRepair = () => {
+    if (!selectedModel || !editRepairName || !editRepairNewName) return;
     const updated = { ...models };
-    updated[selectedModel][editRepairName.trim()] = updated[selectedModel][selectedRepair];
-    delete updated[selectedModel][selectedRepair];
-    setModels(updated);
-    updateFile(updated);
+    const currentRepairs = updated[selectedModel];
+    const entries = Object.entries(currentRepairs).map(([key, val]) => {
+      if (key === editRepairName) return [editRepairNewName, val];
+      return [key, val];
+    });
+    updated[selectedModel] = Object.fromEntries(entries);
+    updateGitHubFile(updated);
     setEditRepairName("");
+    setEditRepairNewName("");
   };
 
-  const handleUpdateRepairPrice = () => {
-    if (!selectedModel || !selectedRepair || !editRepairPrice.trim()) return;
+  const updateRepairPrice = () => {
+    if (!selectedModel || !editRepairName || !editRepairPrice) return;
     const updated = { ...models };
-    updated[selectedModel][selectedRepair] = parseFloat(editRepairPrice);
-    setModels(updated);
-    updateFile(updated);
+    updated[selectedModel][editRepairName] = parseFloat(editRepairPrice);
+    updateGitHubFile(updated);
+    setEditRepairName("");
     setEditRepairPrice("");
   };
 
   if (!authenticated) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>Admin Girişi</h2>
+        <h2>Admin Panel Girişi</h2>
         <input
           type="password"
-          placeholder="Şifre"
+          placeholder="Şifre: Fp9097"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          style={{ marginRight: 10 }}
         />
-        <button onClick={handleLogin}>Giriş Yap</button>
+        <button onClick={() => {
+          if (password === "Fp9097") {
+            setAuthenticated(true);
+          } else {
+            alert("Şifre yanlış.");
+          }
+        }}>
+          Giriş Yap
+        </button>
       </div>
     );
   }
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Admin Panel</h2>
+      <h1>Admin Panel (Şifreli)</h1>
 
-      <div>
-        <input value={newModel} onChange={(e) => setNewModel(e.target.value)} placeholder="Yeni model ismi" />
-        <button onClick={handleAddModel}>Model Ekle</button>
-      </div>
+      <h3>Model Seç</h3>
+      <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
+        <option value="">Model Seç</option>
+        {Object.keys(models).map((m, i) => (
+          <option key={i} value={m}>{m}</option>
+        ))}
+      </select>
 
-      <div>
-        <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-          <option value="">Model Seç</option>
-          {Object.keys(models).map((model) => (
-            <option key={model}>{model}</option>
-          ))}
-        </select>
+      <h3>Yeni Model Ekle</h3>
+      <input value={newModel} onChange={(e) => setNewModel(e.target.value)} placeholder="Yeni model adı" />
+      <button onClick={addModel}>Model Ekle</button>
 
-        {selectedModel && (
-          <>
-            <input
-              value={editModelName}
-              onChange={(e) => setEditModelName(e.target.value)}
-              placeholder="Yeni model adı"
-            />
-            <button onClick={handleRenameModel}>Model Adını Güncelle</button>
+      <h3>Model İsmi Değiştir</h3>
+      <input value={editModelName} onChange={(e) => setEditModelName(e.target.value)} placeholder="Yeni model adı" />
+      <button onClick={renameModel}>Model Adını Güncelle</button>
 
-            <div>
-              <input
-                value={newRepair}
-                onChange={(e) => setNewRepair(e.target.value)}
-                placeholder="Yeni işlem"
-              />
-              <input
-                type="number"
-                value={newPrice}
-                onChange={(e) => setNewPrice(e.target.value)}
-                placeholder="Fiyat"
-              />
-              <button onClick={handleAddRepair}>İşlem Ekle</button>
-            </div>
+      {selectedModel && (
+        <>
+          <h3>İşlem Ekle</h3>
+          <input value={newRepairName} onChange={(e) => setNewRepairName(e.target.value)} placeholder="İşlem adı" />
+          <input value={newRepairPrice} onChange={(e) => setNewRepairPrice(e.target.value)} placeholder="Fiyat" type="number" />
+          <button onClick={addRepair}>Ekle</button>
 
-            <div>
-              <select value={selectedRepair} onChange={(e) => setSelectedRepair(e.target.value)}>
-                <option value="">İşlem Seç</option>
-                {Object.keys(models[selectedModel] || {}).map((r) => (
-                  <option key={r}>{r}</option>
-                ))}
-              </select>
+          <h3>İşlem Adını Değiştir</h3>
+          <select value={editRepairName} onChange={(e) => setEditRepairName(e.target.value)}>
+            <option value="">İşlem Seç</option>
+            {Object.keys(models[selectedModel]).map((r, i) => (
+              <option key={i} value={r}>{r}</option>
+            ))}
+          </select>
+          <input value={editRepairNewName} onChange={(e) => setEditRepairNewName(e.target.value)} placeholder="Yeni işlem adı" />
+          <button onClick={renameRepair}>İşlem Adını Güncelle</button>
 
-              <input
-                value={editRepairName}
-                onChange={(e) => setEditRepairName(e.target.value)}
-                placeholder="Yeni işlem adı"
-              />
-              <button onClick={handleRenameRepair}>İşlem Adını Güncelle</button>
-
-              <input
-                value={editRepairPrice}
-                onChange={(e) => setEditRepairPrice(e.target.value)}
-                placeholder="Yeni fiyat"
-                type="number"
-              />
-              <button onClick={handleUpdateRepairPrice}>İşlem Fiyatını Güncelle</button>
-            </div>
-          </>
-        )}
-      </div>
+          <h3>İşlem Fiyatını Değiştir</h3>
+          <select value={editRepairName} onChange={(e) => setEditRepairName(e.target.value)}>
+            <option value="">İşlem Seç</option>
+            {Object.keys(models[selectedModel]).map((r, i) => (
+              <option key={i} value={r}>{r}</option>
+            ))}
+          </select>
+          <input value={editRepairPrice} onChange={(e) => setEditRepairPrice(e.target.value)} placeholder="Yeni fiyat" type="number" />
+          <button onClick={updateRepairPrice}>Fiyatı Güncelle</button>
+        </>
+      )}
     </div>
   );
 }
