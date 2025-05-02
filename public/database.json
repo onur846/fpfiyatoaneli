@@ -464,7 +464,6 @@
     "Full fiyat": 18900
   },
   "iPhone 13 Mini": {
-    "Doklu Cam Değişimi": 3500,
     "Ön Cam Değişimi": 4000,
     "Orijinal Servis Ekranı (Yeni)": 15000,
     "Orijinal Servis Pili (Yeni)": 4500,
@@ -496,7 +495,8 @@
     "Kasa Değişimi": 13000,
     "Orijinal Çıkma Pil": 2000,
     "Deneme": 1000,
-    "Orijinal Çıkma Ekran": 14000
+    "Orijinal Çıkma Ekran": 14000,
+    "Dokunmatikli Cam Değişimi": 3500
   },
   "iPhone 13 Pro": {
     "Ön Cam Değişimi": 1500,
