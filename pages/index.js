@@ -14,7 +14,7 @@ export default function Home() {
   const handleModelChange = (e) => {
     const model = e.target.value;
     setSelectedModel(model);
-    setSelectedRepairs(Array(10).fill('')); // Model değişince işlemleri sıfırla
+    setSelectedRepairs(Array(10).fill(''));
   };
 
   const handleRepairChange = (index, value) => {
@@ -37,57 +37,56 @@ export default function Home() {
     <div style={{ padding: '20px', backgroundColor: '#2471A3', minHeight: '100vh', color: 'white', fontFamily: 'Arial' }}>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <img src="https://fpprotr.com/wp-content/uploads/2023/04/fppro-logo-symbol-white-nosubtitle.png" alt="FPPRO Logo" style={{ width: '80px' }} />
-        <h1>FPPRO Arıza Fiyat Paneli</h1>
+        <h1 style={{ fontSize: '24px' }}>FPPRO Arıza Fiyat Paneli</h1>
       </div>
 
-      {/* Teknisyen Notu (işlevsiz müsvette) */}
-      <textarea
-        rows="3"
-        placeholder="Teknisyen Notu - (İşlevsiz, sadece müsvette)"
-        style={{ width: '100%', maxWidth: '600px', marginBottom: '20px', padding: '10px', borderRadius: '8px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
-      />
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        {/* Teknisyen Notu */}
+        <textarea
+          rows="3"
+          placeholder="Teknisyen Notu - (İşlevsiz, sadece müsvette)"
+          style={{ width: '100%', marginBottom: '20px', padding: '10px', borderRadius: '8px' }}
+        />
 
-      {/* Model Seçimi */}
-      <select
-        value={selectedModel}
-        onChange={handleModelChange}
-        style={{ width: '100%', maxWidth: '600px', marginBottom: '20px', padding: '10px', borderRadius: '8px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
-      >
-        <option value="">Model Seçiniz</option>
-        {Object.keys(database).map((model, idx) => (
-          <option key={idx} value={model}>{model}</option>
-        ))}
-      </select>
+        {/* Model Seçimi */}
+        <select
+          value={selectedModel}
+          onChange={handleModelChange}
+          style={{ width: '100%', marginBottom: '20px', padding: '10px', borderRadius: '8px' }}
+        >
+          <option value="">Model Seçiniz</option>
+          {Object.keys(database).map((model, idx) => (
+            <option key={idx} value={model}>{model}</option>
+          ))}
+        </select>
 
-      {/* İşlem Seçimi - 10 adet */}
-      {Array.from({ length: 10 }).map((_, idx) => (
-        <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', maxWidth: '800px', margin: '0 auto' }}>
-          <select
-            value={selectedRepairs[idx]}
-            onChange={(e) => handleRepairChange(idx, e.target.value)}
-            style={{ flex: 2, marginRight: '10px', padding: '8px', borderRadius: '8px' }}
-            disabled={!selectedModel}
-          >
-            <option value="">İşlem Seçiniz</option>
-            {selectedModel && database[selectedModel] && Object.keys(database[selectedModel]).map((repair, rIdx) => (
-              <option key={rIdx} value={repair}>{repair}</option>
-            ))}
-          </select>
-          <div style={{ flex: 1 }}>
+        {/* İşlem Seçimi */}
+        {Array.from({ length: 10 }).map((_, idx) => (
+          <div key={idx} style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px' }}>
+            <select
+              value={selectedRepairs[idx]}
+              onChange={(e) => handleRepairChange(idx, e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '8px', marginBottom: '6px' }}
+              disabled={!selectedModel}
+            >
+              <option value="">İşlem Seçiniz</option>
+              {selectedModel && database[selectedModel] && Object.keys(database[selectedModel]).map((repair, rIdx) => (
+                <option key={rIdx} value={repair}>{repair}</option>
+              ))}
+            </select>
             {selectedRepairs[idx] && (
-              <>
-                <div style={{ fontSize: '14px' }}>KDV Hariç: {getPrice(selectedRepairs[idx])} ₺</div>
-                <div style={{ fontSize: '14px' }}>KDV Dahil: {(getPrice(selectedRepairs[idx]) * 1.2).toFixed(2)} ₺</div>
-              </>
+              <div style={{ fontSize: '14px' }}>
+                KDV Hariç: {getPrice(selectedRepairs[idx])} ₺ — KDV Dahil: {(getPrice(selectedRepairs[idx]) * 1.2).toFixed(2)} ₺
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        ))}
 
-      {/* Toplamlar */}
-      <div style={{ marginTop: '30px', fontWeight: 'bold', fontSize: '18px', textAlign: 'center' }}>
-        <div>Toplam KDV Hariç: {totalPriceWithoutKDV} ₺</div>
-        <div>Toplam KDV Dahil: {totalPriceWithKDV} ₺</div>
+        {/* Toplam */}
+        <div style={{ marginTop: '30px', fontWeight: 'bold', fontSize: '18px', textAlign: 'center' }}>
+          <div>Toplam KDV Hariç: {totalPriceWithoutKDV} ₺</div>
+          <div>Toplam KDV Dahil: {totalPriceWithKDV} ₺</div>
+        </div>
       </div>
     </div>
   );
