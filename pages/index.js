@@ -1,92 +1,94 @@
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const [data, setData] = useState({});
-  const [selectedModel, setSelectedModel] = useState("");
-  const [selectedRepairs, setSelectedRepairs] = useState(Array(10).fill(""));
+  const [database, setDatabase] = useState({});
+  const [selectedModel, setSelectedModel] = useState('');
+  const [selectedRepairs, setSelectedRepairs] = useState(Array(10).fill(''));
 
   useEffect(() => {
-    fetchData();
-
-    const socket = new WebSocket("wss://fppro-fiyat-server.onrender.com/websocket");
-    socket.onmessage = (event) => {
-      if (event.data === "update") {
-        fetchData();
-      }
-    };
-
-    return () => socket.close();
+    fetch('/database.json')
+      .then(res => res.json())
+      .then(data => setDatabase(data));
   }, []);
 
-  const fetchData = async () => {
-    const res = await fetch("https://fppro-fiyat-server.onrender.com/data");
-    const json = await res.json();
-    setData(json);
+  const handleModelChange = (e) => {
+    const model = e.target.value;
+    setSelectedModel(model);
+    setSelectedRepairs(Array(10).fill('')); // Model değişince işlemleri sıfırla
   };
 
   const handleRepairChange = (index, value) => {
-    const updated = [...selectedRepairs];
-    updated[index] = value;
-    setSelectedRepairs(updated);
+    const newRepairs = [...selectedRepairs];
+    newRepairs[index] = value;
+    setSelectedRepairs(newRepairs);
   };
 
-  const selectedPrices = selectedRepairs
-    .map((repair) => data[selectedModel]?.[repair])
-    .filter((p) => p !== undefined);
+  const getPrice = (repairName) => {
+    if (selectedModel && repairName && database[selectedModel]) {
+      return database[selectedModel][repairName] || 0;
+    }
+    return 0;
+  };
 
-  const totalPrice = selectedPrices.reduce((acc, val) => acc + val, 0);
-  const totalKdv = totalPrice * 1.2;
+  const totalPriceWithoutKDV = selectedRepairs.reduce((acc, repair) => acc + getPrice(repair), 0);
+  const totalPriceWithKDV = (totalPriceWithoutKDV * 1.2).toFixed(2);
 
   return (
-    <div style={{ padding: 20, backgroundColor: "#3a5a80", minHeight: "100vh", color: "#fff" }}>
-      <img src="https://fpprotr.com/wp-content/uploads/2023/04/fppro-logo-symbol-white-nosubtitle.png" alt="Logo" style={{ width: 100, marginBottom: 20 }} />
-      <h1>FPPRO Arıza Fiyat Paneli</h1>
-
-      <div style={{ marginBottom: 20 }}>
-        <label><strong>Model Seçiniz:</strong></label>
-        <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-          <option value="">Model Seç</option>
-          {Object.keys(data).map((model, idx) => (
-            <option key={idx} value={model}>
-              {model}
-            </option>
-          ))}
-        </select>
+    <div style={{ padding: '20px', backgroundColor: '#2471A3', minHeight: '100vh', color: 'white', fontFamily: 'Arial' }}>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <img src="https://fpprotr.com/wp-content/uploads/2023/04/fppro-logo-symbol-white-nosubtitle.png" alt="FPPRO Logo" style={{ width: '80px' }} />
+        <h1>FPPRO Arıza Fiyat Paneli</h1>
       </div>
 
-      {selectedModel && (
-        <>
-          {Array.from({ length: 10 }).map((_, idx) => (
-            <div key={idx} style={{ marginBottom: 10 }}>
-              <label>İşlem {idx + 1}:</label>
-              <select
-                value={selectedRepairs[idx]}
-                onChange={(e) => handleRepairChange(idx, e.target.value)}
-              >
-                <option value="">İşlem Seç</option>
-                {Object.keys(data[selectedModel] || {}).map((repair, i) => (
-                  <option key={i} value={repair}>
-                    {repair}
-                  </option>
-                ))}
-              </select>
-              {selectedRepairs[idx] && data[selectedModel]?.[selectedRepairs[idx]] && (
-                <p>
-                  <strong>
-                    {data[selectedModel][selectedRepairs[idx]]}₺ (KDV Hariç) —{" "}
-                    {(data[selectedModel][selectedRepairs[idx]] * 1.2).toFixed(2)}₺ (KDV Dahil)
-                  </strong>
-                </p>
-              )}
-            </div>
-          ))}
+      {/* Teknisyen Notu (işlevsiz müsvette) */}
+      <textarea
+        rows="3"
+        placeholder="Teknisyen Notu - (İşlevsiz, sadece müsvette)"
+        style={{ width: '100%', marginBottom: '20px', padding: '10px', borderRadius: '8px' }}
+      />
 
-          <hr />
-          <h3>Toplam:</h3>
-          <p><strong>KDV Hariç:</strong> {totalPrice}₺</p>
-          <p><strong>KDV Dahil:</strong> {totalKdv.toFixed(2)}₺</p>
-        </>
-      )}
+      {/* Model Seçimi */}
+      <select
+        value={selectedModel}
+        onChange={handleModelChange}
+        style={{ width: '100%', marginBottom: '20px', padding: '10px', borderRadius: '8px' }}
+      >
+        <option value="">Model Seçiniz</option>
+        {Object.keys(database).map((model, idx) => (
+          <option key={idx} value={model}>{model}</option>
+        ))}
+      </select>
+
+      {/* İşlem Seçimi - 10 adet */}
+      {Array.from({ length: 10 }).map((_, idx) => (
+        <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <select
+            value={selectedRepairs[idx]}
+            onChange={(e) => handleRepairChange(idx, e.target.value)}
+            style={{ flex: 2, marginRight: '10px', padding: '8px', borderRadius: '8px' }}
+            disabled={!selectedModel}
+          >
+            <option value="">İşlem Seçiniz</option>
+            {selectedModel && database[selectedModel] && Object.keys(database[selectedModel]).map((repair, rIdx) => (
+              <option key={rIdx} value={repair}>{repair}</option>
+            ))}
+          </select>
+          <div style={{ flex: 1 }}>
+            {selectedRepairs[idx] && (
+              <>
+                <div style={{ fontSize: '14px' }}>KDV Hariç: {getPrice(selectedRepairs[idx])} ₺</div>
+                <div style={{ fontSize: '14px' }}>KDV Dahil: {(getPrice(selectedRepairs[idx]) * 1.2).toFixed(2)} ₺</div>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Toplamlar */}
+      <div style={{ marginTop: '30px', fontWeight: 'bold', fontSize: '18px', textAlign: 'center' }}>
+        <div>Toplam KDV Hariç: {totalPriceWithoutKDV} ₺</div>
+        <div>Toplam KDV Dahil: {totalPriceWithKDV} ₺</div>
+      </div>
     </div>
   );
 }
