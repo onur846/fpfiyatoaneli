@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const GITHUB_REPO = "onur846/fpfiyatpaneli"; // kendi repo adın
 const FILE_PATH = "public/database.json";
-const GITHUB_TOKEN = "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"; // kendi tokenin
+const GITHUB_TOKEN = "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"; // kendi tokenin
 const ADMIN_PASSWORD = "Fp9097";
 
 export default function Admin() {
