@@ -466,7 +466,6 @@
   "iPhone 13 Mini": {
     "Ön Cam Değişimi": 5000,
     "Orijinal Servis Ekranı (Yeni)": 15000,
-    "Orijinal Ekran (Kullanılmış)": 14000,
     "Orijinal Servis Pili (Yeni)": 4500,
     "Yüksek Kaliteli Pil (Yeni)": 2500,
     "Orijinal Servis Kamerası (Yeni)": 10500,
@@ -495,7 +494,8 @@
     "Dokunmatikli Ön Cam Değişimi": 5500,
     "Kasa Değişimi": 13000,
     "Orijinal Çıkma Pil": 2000,
-    "Deneme": 1000
+    "Deneme": 1000,
+    "Orijinal Çıkma Ekran": 14000
   },
   "iPhone 13 Pro": {
     "Ön Cam Değişimi": 1500,
